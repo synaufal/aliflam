@@ -4,108 +4,27 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
 // https://en.wikipedia.org/wiki/Arabic_alphabet#Ligatures
 
-const consonant = {
-  'b': 0x0628,
-  't': 0x062A,
-  'j': 0x062C,
-  'h': 0x062D,
-  'd': 0x062F,
-  'r': 0x0631,
-  'Z': 0x0632,
-  's': 0x0633,
-  'f': 0x0641,
-  'q': 0x0642,
-  'k': 0x0643,
-  'l': 0x0644,
-  'm': 0x0645,
-  'n': 0x0646,
-  'w': 0x0648,
-  'H': 0x0647,
-  'y': 0x064A,
-  '\'': 0x0639,
-  'T': 0x0629
-};
-
-const alif = {
-  'A': 0x0627
-};
-
-const compound = {
-  'ts': 0x062B,
-  'dz': 0x0630,
-  'kh': 0x062E,
-  'sy': 0x0634,
-  'sh': 0x0635,
-  'dh': 0x0636,
-  'th': 0x0637,
-  'zh': 0x0638, // void
-  'gh': 0x063A // void
-};
-
-const mark = {
-  'a': 0x064E,
-  'i': 0x0650,
-  'u': 0x064F,
-  'o': 0x0652
-};
-
-const vocal = ['a', 'i', 'u', 'e', 'o']
-
-const number = {
-  '0': 0x0660,
-  '1': 0x0661,
-  '2': 0x0662,
-  '3': 0x0663,
-  '4': 0x0664,
-  '5': 0x0665,
-  '6': 0x0666,
-  '7': 0x0667,
-  '8': 0x0668,
-  '9': 0x0669
-};
-
-const symbol = {
-  '?': 0x061F
-};
-
-const noMiddle = ['d', 'z', 'r', 'Z', 'w'];
-
-const dict = Object.assign({}, consonant, compound, mark, alif, number, symbol);
-
-// const testCases = [
-//   {'input': 'waahidun', 'output': 'وَاحِدٌ'}
-// ]
-
 let latinText = '';  // per kata
 let arabicText = ''; // semuanya
 
 document.getElementById('editor').addEventListener('keydown', event => {
-  if (event.ctrlKey || event.metaKey) return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
   if ([' ', 'Backspace', 'Shift'].includes(event.key)) {
     switch (event.key) {
       case ' ':
-        const lastChar = latinText.slice(-1)
-        const lastTwoChar = latinText.slice(-2, -1)
-        
-        // check again before adding whitespace
-        if (isTanwin(latinText, lastChar, lastTwoChar)) {
-          arabicText = processTanwin(arabicText, lastTwoChar);
-          latinText = '';
-        }
-        if (isSukun(lastChar, ' ')) {
-          arabicText += String.fromCharCode(mark['o'])
-          latinText = '';
-        }
-
-        arabicText += ' ';
+        arabicText = addWhitespace(arabicText, latinText);
+        latinText = '';
         document.getElementById('editor').value = arabicText;
+        document.getElementById('latinDisplay').innerHTML = latinText;
         return;
       case 'Backspace':
+        // to do
       case 'Shift':
-        // do nothing
+        // to do
         return event.preventDefault();
     }
   }
+  
   const char = event.key;
   const lastChar = latinText ? latinText.slice(-1) : '';
   latinText += char;
@@ -213,6 +132,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
   }
 
   document.getElementById('editor').value = arabicText;
+  document.getElementById('latinDisplay').innerHTML = latinText;
   event.preventDefault();
 });
 
@@ -224,8 +144,8 @@ const isSukun = (lastChar, char = ' ') => {
   return (!vocal.includes(char) && !vocal.includes(lastChar) && latinText.length > 1 && !(lastChar + char in compound) && lastChar !== char)
 }
 
-const isTanwin = (latinText, char, lastChar) => {
-  return latinText.length > 3 && char === 'n' && lastChar in mark;
+const isTanwin = (char, lastChar) => {
+  return char === 'n' && lastChar in mark;
 }
 
 const processTanwin = (arabicText, harakat) => {
@@ -247,4 +167,26 @@ const processTanwin = (arabicText, harakat) => {
       break
   }
   return arabicText
+}
+
+const addWhitespace = (arabicText, latinText) => {
+  // when whitespace is added:
+  // 1. check tanwin and sukun
+  // 2. reset latin text
+
+  const lastChar = latinText.slice(-1);
+  
+  if (latinText.length > 3) {
+    const lastTwoChar = latinText.slice(-2, -1);
+    if (isTanwin(latinText, lastChar, lastTwoChar)) {
+      arabicText = processTanwin(arabicText, lastTwoChar);
+    }
+  }
+
+  if (isSukun(lastChar, ' ')) {
+    arabicText += String.fromCharCode(mark['o'])
+  }
+
+  arabicText += ' ';
+  return arabicText;
 }
