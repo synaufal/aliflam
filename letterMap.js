@@ -36,7 +36,7 @@ const compound = {
   'gh': 0x063A, // غ
 };
 
-const mark = {
+const harakat = {
   'a': 0x064E, //  َ
   'i': 0x0650, //  ِ
   'u': 0x064F, //  ُ
@@ -64,4 +64,4 @@ const punctuation = {
 const vocal = ['a', 'i', 'u', 'e', 'o'];
 const noMiddle = ['d', 'z', 'r', 'Z', 'w'];
 
-const dict = Object.assign({}, consonant, compound, mark, alif, number, punctuation);
+const letterMap = Object.assign({}, consonant, compound, harakat, alif, number, punctuation);

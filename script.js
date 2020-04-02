@@ -16,8 +16,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
       case ' ':
         arabicText = addWhitespace(arabicText, latinText);
         latinText = '';
-        document.getElementById('editor').value = arabicText;
-        document.getElementById('latinDisplay').innerHTML = latinText;
+        updateDisplay(arabicText, latinText);
         return;
       case 'Backspace':
         // to do
@@ -28,98 +27,101 @@ document.getElementById('editor').addEventListener('keydown', event => {
   }
   
   const lastLetter = latinText ? latinText.slice(-1) : '';
+  const lastTwoLetter = latinText.length > 1 ? latinText.slice(-2, -1) : '';
   latinText += letter;
 
   // check compound except 'ain, ex: sy, sh, kh
   if (!vocal.includes(lastLetter) && lastLetter + letter in compound) {
-    arabicText = arabicText.slice(0, -1)
+    arabicText = arabicText.slice(0, -1);
     arabicText = appendText(arabicText, lastLetter + letter);
-    document.getElementById('editor').value = arabicText;
+    updateDisplay(arabicText, latinText);
     return event.preventDefault();
   }
 
-  // if (isSukun(lastLetter, char)) {
-  //   arabicText += String.fromCharCode(mark['o'])
-  //   arabicText += String.fromCharCode(dict[char])
-  //   return event.preventDefault()
-  // }
+  if (isSukun(lastLetter, letter)) {
+    arabicText += String.fromCharCode(harakat['o']);
+    arabicText += String.fromCharCode(letterMap[letter]);
+    updateDisplay(arabicText, latinText);
+    return event.preventDefault();
+  }
+
+  // Check tasydid (i.e. double letters). Example: minna, umma, jaddati
+  if (lastLetter in consonant && lastLetter === letter) {
+    arabicText += String.fromCharCode(0x0651);
+    // to do: tasydid followed by harakat uses a single code, not tasyid + harakat code 
+    updateDisplay(arabicText, latinText);
+    return event.preventDefault();
+  }
+
 
   // // handle special cases
   // if (char in consonant) {
   //   const twolastLetter = latinText.slice(-3, -2)
   //   const fourlastLetter = latinText.slice(-4, -3)
 
-  //   // Check tasydid (i.e. double letters). Example: minna, umma, jaddati
-  //   if (lastLetter in consonant && lastLetter === char) {
-  //     arabicText += String.fromCharCode(0x0651)
-  //     return event.preventDefault()
-  //   }
-
   //   // if previously lam + mim exist, prevent that from joining
   //   if (twolastLetter === 'm' && fourlastLetter === 'l') {
   //     const pre = arabicText.slice(0, -2)
   //     const post = arabicText.slice(-2)
-  //     arabicText = pre + String.fromCharCode(0x0640) + post + String.fromCharCode(dict[char])
+  //     arabicText = pre + String.fromCharCode(0x0640) + post + String.fromCharCode(letterMap[char])
   //     return event.preventDefault()
   //   }
   // }
 
-  // if (char in mark) {
-  //   // mark in the beginning, example: itsnaini, arba'atun
-  //   if (latinText === char) {
-  //     switch (char) {
-  //       case 'o':
-  //         break
-  //       case 'a':
-  //         arabicText += String.fromCharCode(0x0623)
-  //         arabicText += String.fromCharCode(dict[char])
-  //         break
-  //       case 'i':
-  //         arabicText += String.fromCharCode(0x0625)
-  //         arabicText += String.fromCharCode(dict[char])
-  //         break
-  //       case 'u':
-  //         arabicText += String.fromCharCode(0x0623)
-  //         arabicText += String.fromCharCode(dict[char])
-  //         break
-  //     }
-  //     return event.preventDefault()
-  //   }
+  // harakat in the beginning, example: (i)tsnaini, (a)rba'atun, (u)swatun
+  if (letter in harakat && latinText === letter) {
+    switch (letter) {
+      case 'o':
+        break
+      case 'a':
+        arabicText += String.fromCharCode(0x0623);
+        arabicText += String.fromCharCode(letterMap[letter]);
+        break
+      case 'i':
+        arabicText += String.fromCharCode(0x0625);
+        arabicText += String.fromCharCode(letterMap[letter]);
+        break
+      case 'u':
+        arabicText += String.fromCharCode(0x0623);
+        arabicText += String.fromCharCode(letterMap[letter]);
+        break
+    }
+    updateDisplay(arabicText, latinText);
+    return event.preventDefault();
+  }
 
-  //   // mad, example: itsnaani
-  //   const lastLetter = latinText.slice(-2, -1)
-  //   const lastTwoChar = latinText.slice(-3, -2)
-  //   if (lastLetter === char) {
-  //     switch (char) {
-  //       case 'a':
-  //         // ligature alif lam
-  //         if (lastTwoChar === 'l') {
-  //           if (latinText === 'laa' || noMiddle.includes(latinText.slice(-5, -4))) {
-  //             arabicText = arabicText.slice(0, -2)
-  //             arabicText += String.fromCharCode(0xFEFB)
-  //           } else {
-  //             arabicText = arabicText.slice(0, -2)
-  //             arabicText += String.fromCharCode(0x200D)
-  //             arabicText += String.fromCharCode(0xFEFC)
-  //           }
-  //           arabicText += String.fromCharCode(mark[char])
-  //         } else {
-  //           arabicText += String.fromCharCode(noMiddle.includes(lastTwoChar) ? 0x061C : 0x0640)
-  //           arabicText += String.fromCharCode(0x200D)
-  //           arabicText += String.fromCharCode(0x0627)
-  //         }
-  //         break
-  //       case 'i':
-  //         arabicText = arabicText.slice(0, -1)
-  //         arabicText += String.fromCharCode(0x0656)
-  //         break
-  //       case 'u':
-  //         arabicText += String.fromCharCode(dict['w'])
-  //         break
-  //     }
-  //     return event.preventDefault()
-  //   }
-  // }
+  // double harakat in the middle: mad, example: itsn(aa)ni, b(aa)bun, (laa)
+  if (lastLetter === letter) {
+    switch (letter) {
+      case 'a':
+        // ligature alif lam
+        if (lastTwoLetter === 'l') {
+          if (latinText === 'laa' || noMiddle.includes(latinText.slice(-5, -4))) {
+            arabicText = arabicText.slice(0, -2)
+            arabicText += String.fromCharCode(0xFEFB)
+          } else {
+            arabicText = arabicText.slice(0, -2)
+            arabicText += String.fromCharCode(0x200D)
+            arabicText += String.fromCharCode(0xFEFC)
+          }
+          arabicText += String.fromCharCode(harakat[letter])
+        } else {
+          arabicText += String.fromCharCode(noMiddle.includes(lastTwoLetter) ? 0x061C : 0x0640)
+          arabicText += String.fromCharCode(0x200D)
+          arabicText += String.fromCharCode(0x0627)
+        }
+        break
+      case 'i':
+        arabicText = arabicText.slice(0, -1);
+        arabicText += String.fromCharCode(0x0656);
+        break;
+      case 'u':
+        arabicText += String.fromCharCode(letterMap['w']);
+        break;
+    }
+    updateDisplay(arabicText, latinText);
+    return event.preventDefault();
+  }
 
   // Joining enforcement for alif in the final position
   if (letter === 'A' && latinText !== 'A') {
@@ -128,17 +130,16 @@ document.getElementById('editor').addEventListener('keydown', event => {
   }
 
   // Normal single letter/harakat
-  if (letter in dict) {
+  if (letter in letterMap) {
     arabicText = appendText(arabicText, letter);
   }
 
-  document.getElementById('editor').value = arabicText;
-  document.getElementById('latinDisplay').innerHTML = latinText;
+  updateDisplay(arabicText, latinText);
   event.preventDefault();
 });
 
 const appendText = (arabicText, letter) => {
-  return arabicText += String.fromCharCode(dict[letter]);
+  return arabicText += String.fromCharCode(letterMap[letter]);
 }
 
 const isSukun = (lastLetter, letter = ' ') => {
@@ -146,7 +147,7 @@ const isSukun = (lastLetter, letter = ' ') => {
 }
 
 const isTanwin = (letter, lastLetter) => {
-  return letter === 'n' && lastLetter in mark;
+  return letter === 'n' && lastLetter in harakat;
 }
 
 const processTanwin = (arabicText, harakat) => {
@@ -185,9 +186,14 @@ const addWhitespace = (arabicText, latinText) => {
   }
 
   if (isSukun(lastLetter, ' ')) {
-    arabicText += String.fromCharCode(mark['o'])
+    arabicText += String.fromCharCode(harakat['o'])
   }
 
   arabicText += ' ';
   return arabicText;
+}
+
+const updateDisplay = (arabicText, latinText) => {
+  document.getElementById('editor').value = arabicText;
+  document.getElementById('latinDisplay').innerHTML = latinText;
 }
