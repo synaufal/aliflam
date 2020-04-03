@@ -19,13 +19,29 @@ document.getElementById('editor').addEventListener('keydown', event => {
         updateDisplay(arabicText, latinText);
         return;
       case 'Backspace':
-        // to do
+        let lastLetters = arabicMap[arabicText.charCodeAt(arabicText.length-1)];
+        if (lastLetters === "o") {
+          arabicText = arabicText.slice(0, -1);
+        } else if (lastLetters.length === 1) {
+          arabicText = arabicText.slice(0, -1);
+          latinText = latinText.slice(0, -1);
+        } else if (lastLetters.length === 2 && lastLetters.charAt(0) in letterMap) {
+          arabicText = arabicText.slice(0, -1) + String.fromCharCode(letterMap[lastLetters.charAt(0)]);
+          latinText = latinText.slice(0, -1);
+        } else {
+          arabicText = arabicText.slice(0, -1);
+          latinText = latinText.slice(0, -1*lastLetters.length);
+        }
+        
+        updateDisplay(arabicText, latinText);
+        return event.preventDefault();
       case 'Shift':
         // to do
         return event.preventDefault();
     }
   }
   
+  console.log('ya')
   const lastLetter = latinText ? latinText.slice(-1) : '';
   const lastTwoLetter = latinText.length > 1 ? latinText.slice(-2, -1) : '';
   latinText += letter;

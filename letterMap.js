@@ -5,7 +5,7 @@ const consonant = {
   'h': 0x062D, // ح
   'd': 0x062F, // د
   'r': 0x0631, // ر
-  'Z': 0x0632, // ز
+  'z': 0x0632, // ز
   's': 0x0633, // س
   'f': 0x0641, // ف
   'q': 0x0642, // ق
@@ -62,6 +62,7 @@ const punctuation = {
 };
 
 const vocal = ['a', 'i', 'u', 'e', 'o'];
-const noMiddle = ['d', 'z', 'r', 'Z', 'w'];
+const noMiddle = ['d', 'z', 'r', 'w'];
 
 const letterMap = Object.assign({}, consonant, compound, harakat, alif, number, punctuation);
+const arabicMap = Object.fromEntries(Object.entries(letterMap).map(([k, v]) => ([v, k])));
