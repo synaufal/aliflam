@@ -172,7 +172,6 @@ const processTanwin = (arabicText, harakat) => {
       arabicText = arabicText.slice(0, -1)
       arabicText += String.fromCharCode(0x064B)
       arabicText += String.fromCharCode(0x200D)
-      console.log(String.fromCharCode(0x064B))
       arabicText += String.fromCharCode(0x0627)
       break
     case 'i':

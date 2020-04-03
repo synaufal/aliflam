@@ -31,9 +31,9 @@ Terinspirasi dari [Arabicpad](https://ebsoft.web.id/download/arabic-pad/), AlifL
 |  َ      | a     |
 |  ِ      | i     |
 |  ُ      | u     |
-|  ً      | an    |
-|  ٍ      | in    |
-|  ٌ      | un    |
+|  ً      | aN    |
+|  ٍ      | iN    |
+|  ٌ      | uN    |
 
 # Contoh
 
