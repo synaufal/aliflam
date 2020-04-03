@@ -162,24 +162,25 @@ const isSukun = (lastLetter, letter = ' ') => {
 }
 
 const isTanwin = (letter, lastLetter) => {
-  return letter === 'n' && lastLetter in harakat;
+  return letter === 'N' && lastLetter in harakat;
 }
 
 const processTanwin = (arabicText, harakat) => {
   // Process tanwin (i.e. an, in, un). Example: ghafuuran, binashrin, qalamun (in the end of a word?)
   switch (harakat) {
     case 'a':
-      arabicText = arabicText.slice(0, -2)
+      arabicText = arabicText.slice(0, -1)
       arabicText += String.fromCharCode(0x064B)
       arabicText += String.fromCharCode(0x200D)
+      console.log(String.fromCharCode(0x064B))
       arabicText += String.fromCharCode(0x0627)
       break
     case 'i':
-      arabicText = arabicText.slice(0, -2)
+      arabicText = arabicText.slice(0, -1)
       arabicText += String.fromCharCode(0x064D)
       break
     case 'u':
-      arabicText = arabicText.slice(0, -2)
+      arabicText = arabicText.slice(0, -1)
       arabicText += String.fromCharCode(0x064C)
       break
   }
@@ -192,15 +193,11 @@ const addWhitespace = (arabicText, latinText) => {
   // 2. reset latin text
 
   const lastLetter = latinText.slice(-1);
+  const lastTwoLetter = latinText.length > 3 ? latinText.slice(-2, -1) : '';
   
-  if (latinText.length > 3) {
-    const lastTwoLetter = latinText.slice(-2, -1);
-    if (isTanwin(latinText, lastLetter, lastTwoLetter)) {
-      arabicText = processTanwin(arabicText, lastTwoLetter);
-    }
-  }
-
-  if (isSukun(lastLetter, ' ')) {
+  if (isTanwin(lastLetter, lastTwoLetter)) {
+    arabicText = processTanwin(arabicText, lastTwoLetter);
+  } else if (isSukun(lastLetter, ' ')) {
     arabicText += String.fromCharCode(harakat[sukun])
   }
 
