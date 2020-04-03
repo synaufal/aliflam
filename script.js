@@ -20,7 +20,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
         return;
       case 'Backspace':
         let lastLetters = arabicMap[arabicText.charCodeAt(arabicText.length-1)];
-        if (lastLetters === "o") {
+        if (lastLetters === sukun) {
           arabicText = arabicText.slice(0, -1);
         } else if (lastLetters.length === 1) {
           arabicText = arabicText.slice(0, -1);
@@ -41,7 +41,6 @@ document.getElementById('editor').addEventListener('keydown', event => {
     }
   }
   
-  console.log('ya')
   const lastLetter = latinText ? latinText.slice(-1) : '';
   const lastTwoLetter = latinText.length > 1 ? latinText.slice(-2, -1) : '';
   latinText += letter;
@@ -55,7 +54,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
   }
 
   if (isSukun(lastLetter, letter)) {
-    arabicText += String.fromCharCode(harakat['o']);
+    arabicText += String.fromCharCode(harakat[sukun]);
     arabicText += String.fromCharCode(letterMap[letter]);
     updateDisplay(arabicText, latinText);
     return event.preventDefault();
@@ -87,7 +86,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
   // harakat in the beginning, example: (i)tsnaini, (a)rba'atun, (u)swatun
   if (letter in harakat && latinText === letter) {
     switch (letter) {
-      case 'o':
+      case sukun:
         break
       case 'a':
         arabicText += String.fromCharCode(0x0623);
@@ -202,7 +201,7 @@ const addWhitespace = (arabicText, latinText) => {
   }
 
   if (isSukun(lastLetter, ' ')) {
-    arabicText += String.fromCharCode(harakat['o'])
+    arabicText += String.fromCharCode(harakat[sukun])
   }
 
   arabicText += ' ';

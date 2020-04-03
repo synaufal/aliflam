@@ -40,9 +40,10 @@ const harakat = {
   'a': 0x064E, //  َ
   'i': 0x0650, //  ِ
   'u': 0x064F, //  ُ
-  'o': 0x0652, //  ْ
 };
 
+const sukun = "o";
+harakat[sukun] = 0x0652; //  ْ
 
 const number = {
   '0': 0x0660, // ٠
