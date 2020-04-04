@@ -66,10 +66,11 @@ const number = {
 
 const punctuation = {
   '?': 0x061F, // ؟
+  ':': false,
 };
 
-const vocal = ['a', 'i', 'u', 'e', 'o'];
 const noMiddle = ['d', 'z', 'r', 'w'];
+const syamsiyah = ['th', 'ts', 'sh', 'r', 't', 'z', 'dz', 's', 'n', 'd', 'sy', 'zh', 'dh', 'l'].reduce((all, k) => { all[k] = true; return all; }, {});
 
 const letterMap = Object.assign({}, consonant, compound, harakat, tanwin, alif, number, punctuation);
 const arabicMap = Object.fromEntries(Object.entries(letterMap).map(([k, v]) => ([v, k])));
