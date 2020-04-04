@@ -7,6 +7,19 @@
 let latinText = '';  // per kata
 let arabicText = ''; // semuanya
 
+let autoSukun = true;
+
+document.getElementById('autoSukunBtn').addEventListener('click', event => {
+  autoSukun = !autoSukun;
+  document.getElementById('autoSukun').checked = autoSukun;
+  document.getElementById('editor').focus();
+});
+
+document.getElementById('autoSukun').addEventListener('change', event => {
+  autoSukun = event.target.checked;
+  document.getElementById('editor').focus();
+});
+
 document.getElementById('editor').addEventListener('keydown', event => {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   let letter = event.key || String.fromCharCode(event.which || event.code);
@@ -191,6 +204,8 @@ const appendText = (arabicText, letter) => {
 }
 
 const isSukun = (letter, lastLetter, lastTwoLetter) => {
+  if (!autoSukun) return false;
+
   // not vocal
   if (vocal.includes(letter) || vocal.includes(lastLetter)) return false;
   
