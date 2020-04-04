@@ -59,8 +59,8 @@ document.getElementById('editor').addEventListener('keydown', event => {
     return event.preventDefault();
   }
 
-  const lastLetter = latinText ? latinText.slice(-1) : '';
-  const lastTwoLetter = latinText.length > 1 ? latinText.slice(-2, -1) : '';
+  const lastLetter = getLastLetter(latinText);
+  const lastTwoLetter = getLastTwoLetter(latinText);
 
   // ignore '-' (will be checked on the next letter)
   if (letter === '-') {
@@ -94,7 +94,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
   }
 
   if (isTanwin(letter, lastLetter, lastTwoLetter)) {
-    arabicText = processTanwin(arabicText, lastLetter);
+    arabicText = processTanwin(arabicText, lastLetter, lastTwoLetter);
   }
 
 
@@ -233,18 +233,31 @@ const isTanwin = (letter, lastLetter, lastTwoLetter) => {
   return letter === 'N' && lastLetter in harakat && lastLetter !== lastTwoLetter;
 }
 
+const getLastLetter = (text) => {
+  return text.length > 0 ? text.slice(-1) : ''
+}
+
+const getLastTwoLetter = (text) => {
+  return text.length > 1 ? text.slice(-2, -1) : '';
+}
+
 const isTasydid = (letter, lastLetter, lastTwoLetter) => {
   return lastLetter in consonant && lastLetter === letter && lastTwoLetter in harakat;
 }
 
-const processTanwin = (arabicText, harakat) => {
+const processTanwin = (arabicText, harakat, lastTwoLetter) => {
   // Process tanwin (i.e. an, in, un). Example: ghafuuran, binashrin, qalamun (in the end of a word?)
   switch (harakat) {
     case 'a':
       arabicText = arabicText.slice(0, -1)
       arabicText += String.fromCharCode(0x064B)
-      arabicText += String.fromCharCode(0x200D)
-      arabicText += String.fromCharCode(0x0627)
+      if (noMiddle.includes(lastTwoLetter)) {
+        arabicText += String.fromCharCode(0x0627);
+      } else {
+        arabicText += String.fromCharCode(0x0640);
+        arabicText += String.fromCharCode(0x200D);
+        arabicText += String.fromCharCode(0x0627);
+      }
       break
     case 'i':
       arabicText = arabicText.slice(0, -1)
@@ -263,11 +276,15 @@ const addWhitespace = (arabicText, latinText) => {
   // 1. check tanwin and sukun
   // 2. reset latin text
 
-  const lastLetter = latinText.slice(-1);
-  const lastTwoLetter = latinText.length > 3 ? latinText.slice(-2, -1) : '';
+  const lastLetter = getLastLetter(latinText);
+  const lastTwoLetter = getLastTwoLetter(latinText);
   
   if (isSukun(' ', lastLetter, lastTwoLetter)) {
     arabicText += String.fromCharCode(harakat[sukun])
+  }
+
+  if (lastLetter === 'w') {
+    arabicText += String.fromCharCode(0x0627);    
   }
 
   arabicText += ' ';

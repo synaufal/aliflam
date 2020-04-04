@@ -42,6 +42,12 @@ const harakat = {
   'u': 0x064F, //  ُ
 };
 
+const tanwin = {
+  'aN': 0x064D, // to do: aN uses several chars
+  'iN': 0x064D,
+  'uN': 0x064C,
+}
+
 const sukun = "o";
 harakat[sukun] = 0x0652; //  ْ
 
@@ -65,5 +71,5 @@ const punctuation = {
 const vocal = ['a', 'i', 'u', 'e', 'o'];
 const noMiddle = ['d', 'z', 'r', 'w'];
 
-const letterMap = Object.assign({}, consonant, compound, harakat, alif, number, punctuation);
+const letterMap = Object.assign({}, consonant, compound, harakat, tanwin, alif, number, punctuation);
 const arabicMap = Object.fromEntries(Object.entries(letterMap).map(([k, v]) => ([v, k])));
