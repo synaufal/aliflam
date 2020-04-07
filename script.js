@@ -7,6 +7,7 @@ let latinText = '';   // current latin word in active typing
 let arabicText = '';  // all arabic words
 let autoSukun = true; // automatically add sukun if applicable
 
+
 // Settings
 
 document.getElementById('autoSukunBtn').addEventListener('click', event => {
@@ -20,7 +21,9 @@ document.getElementById('autoSukun').addEventListener('change', event => {
   document.getElementById('editor').focus();
 });
 
+
 // Main
+
 document.getElementById('editor').addEventListener('keydown', event => {
   // Get pressed key
   // To do: fix "unidentified" key on mobile browsers
@@ -66,38 +69,37 @@ document.getElementById('editor').addEventListener('keydown', event => {
   latinText += letter;
 
   // check compound except 'ain, ex: sy, sh, kh
-  if (!(lastLetter in harakat) && lastLetter + letter in compound) {
+  if (isCompound(letter, lastLetter)) {
+    const compound = lastLetter + letter;
     const lastThreeLetter = latinText.length > 2 ? latinText.slice(-4, -3) : '';
     const lastFourLetter = latinText.length > 3 ? latinText.slice(-5, -4) : '';
+    
+    // remove last letter if already written (all except 'g'). ex: ash (remove 's' add 'sh')
     if (lastLetter in consonant) arabicText = arabicText.slice(0, -1);
-    if (lastThreeLetter + lastTwoLetter === lastLetter + letter) { // compound tasydid, ex: ba(sysy)iriyna
-      if (lastFourLetter === 'A' && lastLetter + letter in syamsiyah) {
-        // alif lam syamsiyah
+    
+    // compound tasydid, ex: ba(sysy)iriyna
+    if (lastThreeLetter + lastTwoLetter === compound) {
+      if (isSyamsiyah(lastFourLetter, compound)) {
         arabicText = arabicText.slice(0, -2) + String.fromCharCode(letterMap['l']) + arabicText.slice(-2, -1);
       }
-      arabicText += String.fromCharCode(0x0651);
+      arabicText += arabicSymbol('tasydid');
     } else {
-      arabicText = appendText(arabicText, lastLetter + letter);
+      arabicText += arabicLetter(compound);
     }
+    
     updateDisplay(arabicText, latinText);
     return event.preventDefault();
   }
 
   if (isSukun(letter, lastLetter, lastTwoLetter)) {
-    arabicText += String.fromCharCode(harakat[sukun]);
-    if (letter != '-') arabicText += String.fromCharCode(letterMap[letter]);
+    [arabicText, latinText] = addSukun(arabicText, latinText, letter)
     updateDisplay(arabicText, latinText);
     return event.preventDefault();
   }
 
   // Check tasydid (i.e. double letters). Example: minna, umma, jaddati
   if (isTasydid(letter, lastLetter, lastTwoLetter)) {
-    if (lastTwoLetter === 'A' && lastLetter in syamsiyah) {
-      // alif lam syamsiyah
-      let additionalLam = lastLetter !== 'l' ? String.fromCharCode(letterMap['l']) : '';
-      arabicText = arabicText.slice(0, -1) + additionalLam + arabicText.slice(-1);
-    }
-    arabicText += String.fromCharCode(0x0651);
+    [arabicText, latinText] = addTasydid(arabicText, latinText, lastLetter, lastTwoLetter)
     updateDisplay(arabicText, latinText);
     return event.preventDefault();
   }
@@ -106,45 +108,46 @@ document.getElementById('editor').addEventListener('keydown', event => {
     arabicText = processTanwin(arabicText, lastLetter, lastTwoLetter);
   }
 
-
-  // // handle special cases
-  // if (char in consonant) {
-  //   const twolastLetter = latinText.slice(-3, -2)
-  //   const fourlastLetter = latinText.slice(-4, -3)
-
-  //   // if previously lam + mim exist, prevent that from joining
-  //   if (twolastLetter === 'm' && fourlastLetter === 'l') {
-  //     const pre = arabicText.slice(0, -2)
-  //     const post = arabicText.slice(-2)
-  //     arabicText = pre + String.fromCharCode(0x0640) + post + String.fromCharCode(letterMap[char])
-  //     return event.preventDefault()
-  //   }
-  // }
-
   // harakat in the beginning, example: (i)tsnaini, (a)rba'atun, (u)swatun
-  if (letter in harakat && latinText === letter) {
+  if (latinText.length === 1 && letter in harakat) {
     switch (letter) {
       case sukun:
         break
       case 'a':
-        arabicText += String.fromCharCode(0x0623);
-        arabicText += String.fromCharCode(letterMap[letter]);
+        arabicText += arabicSymbol('upper alif');
+        arabicText += arabicLetter(letter);
         break
       case 'i':
-        arabicText += String.fromCharCode(0x0625);
-        arabicText += String.fromCharCode(letterMap[letter]);
+        arabicText += arabicSymbol('lower alif');
+        arabicText += arabicLetter(letter);
         break
       case 'u':
-        arabicText += String.fromCharCode(0x0623);
-        arabicText += String.fromCharCode(letterMap[letter]);
+        arabicText += arabicSymbol('upper alif');
+        arabicText += arabicLetter(letter);
         break
     }
     updateDisplay(arabicText, latinText);
     return event.preventDefault();
   }
 
+  // double harakat in the beginning. example: aamanu
+  if (latinText.length === 2 && letter in harakat && lastLetter == letter) {
+    switch (letter) {
+      case 'a':
+        arabicText = arabicText.slice(0, -2)
+        arabicText += String.fromCharCode(0x0622);
+      case 'i':
+        latinText = latinText.slice(0, -1);
+      case 'u':
+        latinText = latinText.slice(0, -1);
+      default:
+        updateDisplay(arabicText, latinText);
+        return event.preventDefault();
+    }
+  }
+
   // double harakat in the middle: mad, example: itsn(aa)ni, b(aa)bun, (laa)
-  if (letter in harakat && lastLetter === letter) {
+  if (latinText.length > 2 && letter in harakat && lastLetter === letter) {
     switch (letter) {
       case 'a':
         // ligature alif lam
@@ -210,9 +213,21 @@ document.getElementById('editor').addEventListener('keydown', event => {
   return event.preventDefault();
 });
 
+
+// Helper Functions
+
 const appendText = (arabicText, letter) => {
   return arabicText += String.fromCharCode(letterMap[letter]);
-}
+};
+
+const arabicLetter = (letter) => {
+  return String.fromCharCode(letterMap[letter]);
+};
+
+
+const arabicSymbol = (s) => {
+  return String.fromCharCode(symbol[s]);
+};
 
 const isSukun = (letter, lastLetter, lastTwoLetter) => {
   if (!autoSukun) return false;
@@ -243,6 +258,10 @@ const isSukun = (letter, lastLetter, lastTwoLetter) => {
 const isTanwin = (letter, lastLetter, lastTwoLetter) => {
   return letter === 'N' && lastLetter in harakat && lastLetter !== lastTwoLetter;
 }
+
+const isCompound = (letter, lastLetter) => {
+  return !(lastLetter in harakat) && lastLetter + letter in compound
+};
 
 const getLastLetter = (text) => {
   return text.length > 0 ? text.slice(-1) : ''
@@ -340,4 +359,23 @@ const getAdditionalSukunAndMad = (latinText) => {
   }
 
   return '';
+};
+
+const addSukun = (arabicText, latinText, letter) => {
+  arabicText += String.fromCharCode(harakat[sukun]);
+  if (letter != '-') arabicText += String.fromCharCode(letterMap[letter]);
+  return [arabicText, latinText];
+};
+
+const addTasydid = (arabicText, latinText, lastLetter, lastTwoLetter) => {
+  if (isSyamsiyah(lastTwoLetter, lastLetter)) {
+    let additionalLam = lastLetter !== 'l' ? String.fromCharCode(letterMap['l']) : '';
+    arabicText = arabicText.slice(0, -1) + additionalLam + arabicText.slice(-1);
+  }
+  arabicText += arabicSymbol('tasydid');
+  return [arabicText, latinText];
+};
+
+const isSyamsiyah = (lastTwoLetter, lastLetter) => {
+  return lastTwoLetter === 'A' && lastLetter in syamsiyah;
 };

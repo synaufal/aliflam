@@ -69,6 +69,12 @@ const punctuation = {
   ':': false,
 };
 
+const symbol = {
+  'tasydid': 0x0651,
+  'upper alif': 0x0623,
+  'lower alif': 0x0625,
+};
+
 const noMiddle = ['d', 'z', 'r', 'w'];
 const syamsiyah = ['th', 'ts', 'sh', 'r', 't', 'z', 'dz', 's', 'n', 'd', 'sy', 'zh', 'dh', 'l'].reduce((all, k) => { all[k] = true; return all; }, {});
 

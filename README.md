@@ -22,7 +22,7 @@ Terinspirasi dari [Arabicpad](https://ebsoft.web.id/download/arabic-pad/), AlifL
 | س      | s     |     | ه      | H     |
 | ش      | sy    |     | ي      | y     |
 | ص      | sh    |     | ة      | T     |
-| ض      | dh    |     |        |       |
+| ض      | dh    |     | ء      | -     |
 
 ## Harakat
 
