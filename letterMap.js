@@ -48,9 +48,6 @@ const tanwin = {
   'uN': 0x064C,
 }
 
-const sukun = "o";
-harakat[sukun] = 0x0652; //  ْ
-
 const number = {
   '0': 0x0660, // ٠
   '1': 0x0661, // ١
@@ -73,6 +70,7 @@ const symbol = {
   'tasydid': 0x0651,
   'upper alif': 0x0623,
   'lower alif': 0x0625,
+  'sukun': 0x0652,
 };
 
 const noMiddle = ['d', 'z', 'r', 'w'];

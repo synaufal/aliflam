@@ -1,6 +1,6 @@
 # AlifLam
 
-Terinspirasi dari [Arabicpad](https://ebsoft.web.id/download/arabic-pad/), AlifLam ialah sebuah teks editor berbasis web yang dapat digunakan untuk menulis huruf Arab menggunakan huruf latin, yakni berdasarkan pedoman transliterasi Arab-Latin yang telah disesuaikan.
+Terinspirasi dari [Arabicpad](https://ebsoft.web.id/download/arabic-pad/), AlifLam ialah sebuah teks editor berbasis web yang dapat digunakan untuk menulis huruf Arab menggunakan huruf latin, yakni berdasarkan pedoman transliterasi Arab-Latin yang telah disesuaikan sehingga menulis huruf Arab menjadi lebih mudah dan menyenangkan.
 
 # Karakter
 
