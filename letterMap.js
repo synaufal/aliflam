@@ -71,10 +71,11 @@ const symbol = {
   'upper alif': 0x0623,
   'lower alif': 0x0625,
   'sukun': 0x0652,
+  'space': 0x0020,
 };
 
 const noMiddle = ['d', 'z', 'r', 'w'];
 const syamsiyah = ['th', 'ts', 'sh', 'r', 't', 'z', 'dz', 's', 'n', 'd', 'sy', 'zh', 'dh', 'l'].reduce((all, k) => { all[k] = true; return all; }, {});
 
-const letterMap = Object.assign({}, consonant, compound, harakat, tanwin, alif, number, punctuation);
+const letterMap = Object.assign({}, consonant, compound, harakat, tanwin, alif, number, punctuation, symbol);
 const arabicMap = Object.fromEntries(Object.entries(letterMap).map(([k, v]) => ([v, k])));

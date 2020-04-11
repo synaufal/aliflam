@@ -3,7 +3,8 @@
 // https://jrgraphix.net/r/Unicode/0600-06FF
 // https://en.wikipedia.org/wiki/Arabic_alphabet#Ligatures
 
-let latinText = '';   // current latin word in active typing
+let currentWord = ''; // latin word in active typingb
+let latinText = '';   // all latin words
 let arabicText = '';  // all arabic words
 let autoSukun = true; // automatically add sukun if applicable
 
@@ -32,47 +33,48 @@ document.getElementById('editor').addEventListener('keydown', event => {
 
   switch (true) {
     case (letter === 'Enter'):
-      [arabicText, latinText] = handleEnter(arabicText, latinText);
-      updateDisplay(arabicText, latinText);
+      [arabicText, currentWord, latinText] = handleEnter(arabicText, currentWord, latinText);
+      updateDisplay(arabicText, currentWord);
       return event.preventDefault();
 
     case (letter === 'Backspace'):
-      [arabicText, latinText] = handleBackspace(arabicText, latinText);
-      updateDisplay(arabicText, latinText);
+      [arabicText, currentWord, latinText] = handleBackspace(arabicText, currentWord, latinText);
+      updateDisplay(arabicText, currentWord);
       return event.preventDefault();
     
     case (letter === 'Shift'):
       return event.preventDefault();
 
     case (letter === ' '):
-      [arabicText, latinText] = handleWhitespace(arabicText, latinText);
-      updateDisplay(arabicText, latinText);
+      [arabicText, currentWord, latinText] = handleWhitespace(arabicText, currentWord, latinText);
+      updateDisplay(arabicText, currentWord);
       return event.preventDefault();
 
     case (letter in punctuation):
-      [arabicText, latinText] = handlePunctuation(arabicText, latinText, letter);
-      updateDisplay(arabicText, latinText);
+      [arabicText, currentWord, latinText] = handlePunctuation(arabicText, currentWord, latinText, letter);
+      updateDisplay(arabicText, currentWord);
       return event.preventDefault();
 
-    case (!isInputAllowed(letter)):
+    case (!isInputAllowed(currentWord, letter)):
       return event.preventDefault();
 
     case (letter === '-'):
-      latinText += letter;
-      updateDisplay(arabicText, latinText);
+      currentWord += letter;
+      updateDisplay(arabicText, currentWord);
       return event.preventDefault();    
   }
 
-  const lastLetter = getLastLetter(latinText);
-  const lastTwoLetter = getLastTwoLetter(latinText);
+  const lastLetter = getLastLetter(currentWord);
+  const lastTwoLetter = getLastTwoLetter(currentWord);
 
+  currentWord += letter;
   latinText += letter;
 
   // check compound except 'ain, ex: sy, sh, kh
   if (isCompound(letter, lastLetter)) {
     const compound = lastLetter + letter;
-    const lastThreeLetter = latinText.length > 2 ? latinText.slice(-4, -3) : '';
-    const lastFourLetter = latinText.length > 3 ? latinText.slice(-5, -4) : '';
+    const lastThreeLetter = currentWord.length > 2 ? currentWord.slice(-4, -3) : '';
+    const lastFourLetter = currentWord.length > 3 ? currentWord.slice(-5, -4) : '';
     
     // remove last letter if already written (all except 'g'). ex: ash (remove 's' add 'sh')
     if (lastLetter in consonant) arabicText = arabicText.slice(0, -1);
@@ -87,29 +89,31 @@ document.getElementById('editor').addEventListener('keydown', event => {
       arabicText += arabicLetter(compound);
     }
     
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
-  if (isSukun(letter, lastLetter, lastTwoLetter)) {
-    [arabicText, latinText] = addSukun(arabicText, latinText, letter)
-    updateDisplay(arabicText, latinText);
+  if (isSukun(currentWord, letter, lastLetter, lastTwoLetter)) {
+    arabicText = addSukun(arabicText, letter)
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
   // Check tasydid (i.e. double letters). Example: minna, umma, jaddati
   if (isTasydid(letter, lastLetter, lastTwoLetter)) {
-    [arabicText, latinText] = addTasydid(arabicText, latinText, lastLetter, lastTwoLetter)
-    updateDisplay(arabicText, latinText);
+    arabicText = addTasydid(arabicText, lastLetter, lastTwoLetter)
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
   if (isTanwin(letter, lastLetter, lastTwoLetter)) {
     arabicText = addTanwin(arabicText, lastLetter, lastTwoLetter);
+    updateDisplay(arabicText, currentWord);
+    return event.preventDefault();
   }
 
   // harakat in the beginning, example: (i)tsnaini, (a)rba'atun, (u)swatun
-  if (latinText.length === 1 && letter in harakat) {
+  if (currentWord.length === 1 && letter in harakat) {
     switch (letter) {
       case 'a':
         arabicText += arabicSymbol('upper alif');
@@ -124,33 +128,37 @@ document.getElementById('editor').addEventListener('keydown', event => {
         arabicText += arabicLetter(letter);
         break
     }
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
   // double harakat in the beginning. example: aamanu
-  if (latinText.length === 2 && letter in harakat && lastLetter == letter) {
+  if (currentWord.length === 2 && letter in harakat && lastLetter == letter) {
     switch (letter) {
       case 'a':
         arabicText = arabicText.slice(0, -2)
         arabicText += String.fromCharCode(0x0622);
       case 'i':
+        currentWord = currentWord.slice(0, -1);
         latinText = latinText.slice(0, -1);
       case 'u':
+        currentWord = currentWord.slice(0, -1);
         latinText = latinText.slice(0, -1);
       default:
-        updateDisplay(arabicText, latinText);
+        updateDisplay(arabicText, currentWord);
         return event.preventDefault();
     }
   }
 
   // double harakat in the middle: mad, example: itsn(aa)ni, b(aa)bun, (laa)
-  if (latinText.length > 2 && letter in harakat && lastLetter === letter) {
+  if (currentWord.length > 2 && letter in harakat && lastLetter === letter) {
     switch (letter) {
       case 'a':
         // ligature alif lam
         if (lastTwoLetter === 'l') {
-          if (latinText === 'laa' || noMiddle.includes(latinText.slice(-5, -4))) {
+          const fourthLastLetter = currentWord.length > 2 ? currentWord.slice(-4, -3) : '';
+          const fifthLastLetter = currentWord.length > 3 ? currentWord.slice(-5, -4) : '';
+          if ((currentWord === 'laa' && fourthLastLetter != 'l') || noMiddle.includes(fifthLastLetter)) {
             arabicText = arabicText.slice(0, -2)
             arabicText += String.fromCharCode(0xFEFB)
           } else {
@@ -177,15 +185,15 @@ document.getElementById('editor').addEventListener('keydown', event => {
         arabicText += arabicLetter('w');
         break;
     }
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
   // Joining enforcement for alif in the final position
-  if (letter === 'A' && latinText !== 'A') {
+  if (letter === 'A' && currentWord !== 'A') {
     arabicText += String.fromCharCode(0x0640);
     arabicText += String.fromCharCode(0x200D);
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
@@ -194,7 +202,7 @@ document.getElementById('editor').addEventListener('keydown', event => {
     arabicText = arabicText.slice(0, -2);
     arabicText += String.fromCharCode(0xFEFB);
     arabicText += arabicLetter(letter);
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
@@ -203,11 +211,11 @@ document.getElementById('editor').addEventListener('keydown', event => {
     // hamzah, example: Assamaa-u
     if (lastLetter === '-') arabicText += String.fromCharCode(0x0621)
     arabicText += arabicLetter(letter);
-    updateDisplay(arabicText, latinText);
+    updateDisplay(arabicText, currentWord);
     return event.preventDefault();
   }
 
-  updateDisplay(arabicText, latinText);
+  updateDisplay(arabicText, currentWord);
   return event.preventDefault();
 });
 
@@ -223,7 +231,7 @@ const arabicSymbol = (s) => {
   return String.fromCharCode(symbol[s]);
 };
 
-const isSukun = (letter, lastLetter, lastTwoLetter) => {
+const isSukun = (currentWord, letter, lastLetter, lastTwoLetter) => {
   if (!autoSukun) return false;
 
   // not harakat, tanwin, or punctuation
@@ -233,7 +241,7 @@ const isSukun = (letter, lastLetter, lastTwoLetter) => {
   if (lastLetter === 'A') return false;
   
   // at least 2 letters
-  if (latinText.length < 2) return false;
+  if (currentWord.length < 2) return false;
   
   // not a compound
   if (lastLetter + letter in compound) return false;
@@ -295,55 +303,74 @@ const addTanwin = (arabicText, harakat, lastTwoLetter) => {
   return arabicText
 }
 
-const updateDisplay = (arabicText, latinText) => {
+const updateDisplay = (arabicText, currentWord) => {
   document.getElementById('editor').value = arabicText;
-  document.getElementById('latinDisplay').innerHTML = latinText;
+  document.getElementById('latinDisplay').innerHTML = currentWord;
 }
 
-const handlePunctuation = (arabicText, latinText, letter) => {
-  arabicText += getAdditionalSukunAndMad(latinText)
+const handlePunctuation = (arabicText, currentWord, latinText, letter) => {
+  arabicText += getAdditionalSukunAndMad(currentWord)
   arabicText += punctuation[letter] !== false ? arabicLetter(letter) : letter;
-  latinText = '';
-  return [arabicText, latinText]; 
+  currentWord = '';
+  latinText += letter;
+  return [arabicText, currentWord, latinText]; 
 };
 
-const handleEnter = (arabicText, latinText) => {
+const handleEnter = (arabicText, currentWord, latinText) => {
   arabicText += '\n';
-  latinText = '';
-  return [arabicText, latinText];
+  currentWord = '';
+  latinText += '\n';
+  return [arabicText, currentWord, latinText];
 };
 
-const handleWhitespace = (arabicText, latinText) => {
-  arabicText += getAdditionalSukunAndMad(latinText)
+const handleWhitespace = (arabicText, currentWord, latinText) => {
+  arabicText += getAdditionalSukunAndMad(currentWord)
   arabicText += ' ';
-  latinText = '';
-  return [arabicText, latinText];
+  currentWord = '';
+  latinText += ' ';
+  return [arabicText, currentWord, latinText];
 };
 
-const handleBackspace = (arabicText, latinText) => {
-  let lastLetters = arabicMap[arabicText.charCodeAt(arabicText.length-1)];
-  if (lastLetters.length === 1) {
+const handleBackspace = (arabicText, currentWord, latinText) => {
+  // latin text of last arabic character
+  let lastArabic = arabicText.charCodeAt(arabicText.length-1);
+  let lastLetters = arabicMap[lastArabic];
+  
+  if (lastLetters in symbol) {
+    if (lastLetters === 'space') {
+      arabicText = arabicText.slice(0, -1);
+      latinText = latinText.slice(0, -1);
+      textSplits = latinText.split(' ');
+      currentWord = textSplits[textSplits.length-1];
+    } else if (lastLetters === 'sukun') {
+      arabicText = arabicText.slice(0, -1);
+    }
+  } else if (lastLetters.length === 1) {
     arabicText = arabicText.slice(0, -1);
+    currentWord = currentWord.slice(0, -1);
     latinText = latinText.slice(0, -1);
   } else if (lastLetters.length === 2 && lastLetters.charAt(0) in letterMap) {
     arabicText = arabicText.slice(0, -1) + arabicLetter(lastLetters.charAt(0));
+    currentWord = currentWord.slice(0, -1);
     latinText = latinText.slice(0, -1);
   } else {
     arabicText = arabicText.slice(0, -1);
+    currentWord = currentWord.slice(0, -1*lastLetters.length);
     latinText = latinText.slice(0, -1*lastLetters.length);
   }
-  return [arabicText, latinText];
+
+  return [arabicText, currentWord, latinText];
 }
 
-const isInputAllowed = (letter) => {
-  return letter.match(/[0-9btjhdrzsfqklmnwHy\'TgAaiuN\?\-]/) && !(letter === '-' && latinText < 2);
+const isInputAllowed = (currentWord, letter) => {
+  return letter.match(/[0-9btjhdrzsfqklmnwHy\'TgAaiuN\?\-]/) && !(letter === '-' && currentWord < 2);
 };
 
-const getAdditionalSukunAndMad = (latinText) => {
-  const lastLetter = getLastLetter(latinText);
-  const lastTwoLetter = getLastTwoLetter(latinText);
+const getAdditionalSukunAndMad = (currentWord) => {
+  const lastLetter = getLastLetter(currentWord);
+  const lastTwoLetter = getLastTwoLetter(currentWord);
   
-  if (isSukun(' ', lastLetter, lastTwoLetter)) {
+  if (isSukun(currentWord, ' ', lastLetter, lastTwoLetter)) {
     return arabicSymbol('sukun')
   }
   if (lastLetter === 'w' || lastLetter === 'u' && lastTwoLetter === 'u') {
@@ -353,19 +380,19 @@ const getAdditionalSukunAndMad = (latinText) => {
   return '';
 };
 
-const addSukun = (arabicText, latinText, letter) => {
+const addSukun = (arabicText, letter) => {
   arabicText += arabicSymbol('sukun');
   if (letter != '-') arabicText += arabicLetter(letter);
-  return [arabicText, latinText];
+  return arabicText;
 };
 
-const addTasydid = (arabicText, latinText, lastLetter, lastTwoLetter) => {
+const addTasydid = (arabicText, lastLetter, lastTwoLetter) => {
   if (isSyamsiyah(lastTwoLetter, lastLetter)) {
     let additionalLam = lastLetter !== 'l' ? arabicLetter('l') : '';
     arabicText = arabicText.slice(0, -1) + additionalLam + arabicText.slice(-1);
   }
   arabicText += arabicSymbol('tasydid');
-  return [arabicText, latinText];
+  return arabicText;
 };
 
 const isSyamsiyah = (lastTwoLetter, lastLetter) => {
