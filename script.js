@@ -206,6 +206,13 @@ document.getElementById('editor').addEventListener('keydown', event => {
     return event.preventDefault();
   }
 
+  // Allah
+  if (currentWord == 'AllaaH') {
+    arabicText = arabicText.slice(0, -3) + arabicLetter('l') + arabicSymbol('tasydid') + String.fromCharCode(0x0670) + arabicText.slice(-3, -2);
+  } else if (currentWord == 'lillaaH') {
+    arabicText = arabicText.slice(0, -4) + arabicLetter('l') + arabicSymbol('tasydid') + String.fromCharCode(0x0670) + arabicText.slice(-3, -2);
+  }
+
   // Normal single letter/harakat
   if (letter in letterMap) {
     // hamzah, example: Assamaa-u
@@ -344,6 +351,10 @@ const handleBackspace = (arabicText, currentWord, latinText) => {
       currentWord = textSplits[textSplits.length-1];
     } else if (lastLetters === 'sukun') {
       arabicText = arabicText.slice(0, -1);
+    } else if (lastLetters === 'tasydid') {
+      arabicText = arabicText.slice(0, -1);
+      currentWord = currentWord.slice(0, -1);
+      latinText = latinText.slice(0, -1);  
     }
   } else if (lastLetters.length === 1) {
     arabicText = arabicText.slice(0, -1);
